@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from 'axios'; // //ne pas toucher sauf fullstack
+
+// //ne pas toucher sauf fullstack : Configuration de l'URL de base
+const API_URL = "http://localhost:5000/api";
 
 function App() {
   const [input, setInput] = useState('');
@@ -8,28 +11,33 @@ function App() {
   ]);
   const [loading, setLoading] = useState(false);
 
+  // //ne pas toucher sauf fullstack : Logique d'appel API
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    const currentInput = input.trim(); // On capture la valeur actuelle pour éviter les bugs d'asynchronisme
+    if (!currentInput || loading) return;
 
     // Ajouter le message utilisateur à l'écran
-    const userMsg = { role: 'user', text: input };
+    const userMsg = { role: 'user', text: currentInput };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
 
     try {
-      // Appel à ton backend local (Port 5000)
-      const response = await axios.post('http://localhost:5000/api/chat', {
-        prompt: input
+      // //ne pas toucher sauf fullstack : Appel vers le serveur Node.js
+      const response = await axios.post(`${API_URL}/chat`, {
+        prompt: currentInput
       });
 
-      // Ajouter la réponse de l'IA (Groq)
+      // //ne pas toucher sauf fullstack : Extraction de la réponse Groq
       const aiMsg = { role: 'ai', text: response.data.text };
       setMessages((prev) => [...prev, aiMsg]);
     } catch (error) {
       console.error("Erreur de liaison API:", error);
-      setMessages((prev) => [...prev, { role: 'ai', text: "Désolé, mon serveur est un peu fatigué. Vérifie si le backend est lancé !" }]);
+      setMessages((prev) => [...prev, { 
+        role: 'ai', 
+        text: "Désolé, la connexion avec Tana est interrompue. Vérifie que le backend est lancé !" 
+      }]);
     } finally {
       setLoading(false);
     }
@@ -37,13 +45,13 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4">
-      {/* Header */}
+      {/* --- DESIGN : Tes coéquipiers peuvent modifier tout ce qui est en dessous --- */}
+      
       <header className="w-full max-w-2xl py-6 text-center">
         <h1 className="text-4xl font-extrabold text-blue-700 tracking-tight">Akaiky IA</h1>
         <p className="text-slate-500 font-medium">L'expertise locale à portée de main</p>
       </header>
 
-      {/* Chat Container */}
       <div className="flex-1 w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-slate-100">
         
         {/* Zone des messages */}

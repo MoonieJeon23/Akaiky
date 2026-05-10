@@ -182,3 +182,8 @@
     border-right-color: var(--border);
   }
 }
+
+.leaflet-container {
+  width: 100%;
+  height: 400px; /* Ou vh-100 pour toute la page */
+}

@@ -1,3 +1,113 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  --bg-dark: #0f172a;
+  --bg-gradient: radial-gradient(circle at top right, #1e293b 0%, #0f172a 100%);
+  --card-bg: #1e293b; /* On enlève la transparence pour la lisibilité */
+  --primary-blue: #3b82f6;
+  --primary-glow: rgba(59, 130, 246, 0.5);
+  --accent-red: #f43f5e;
+  --accent-green: #10b981;
+  --text-main: #ffffff; /* Blanc pur pour les messages */
+  --text-muted: #94a3b8;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-gradient) fixed;
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  font-size: 16px; /* Taille de base standard */
+}
+
+/* Header */
+nav, .sticky-top {
+  background: rgba(15, 23, 42, 0.9) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  backdrop-filter: blur(15px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+h1 {
+  font-weight: 800 !important;
+  background: linear-gradient(to right, #60a5fa, #2563eb);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cartes : On force l'opacité pour que le contenu ressorte */
+.card {
+  background: var(--card-bg) !important; 
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.card-header {
+  background: rgba(0, 0, 0, 0.2) !important;
+  color: #60a5fa !important; /* Bleu clair pour les titres de section */
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  padding: 1rem !important;
+}
+
+/* Bulles de Chat : RÉGLAGE DE LA LISIBILITÉ */
+.bg-light { 
+  background: #334155 !important; /* Fond gris acier solide */
+  color: #ffffff !important;      /* Texte blanc pur */
+  font-size: 1rem !important;
+  line-height: 1.5;
+  border-radius: 18px !important;
+  padding: 12px 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.bg-primary { 
+  background: var(--primary-blue) !important;
+  color: #ffffff !important;
+  font-size: 1rem !important;
+  border-radius: 18px !important;
+  padding: 12px 16px !important;
+}
+
+/* Formulaires */
+.form-control {
+  background: #0f172a !important;
+  color: white !important;
+  border: 1px solid #334155 !important;
+  height: 50px !important;
+  font-size: 1rem !important;
+}
+
+/* Pharmacie de Garde : On force le contraste vert */
+.bg-success-subtle {
+  background: rgba(16, 185, 129, 0.1) !important;
+  border: 2px solid var(--accent-green) !important;
+}
+
+.bg-success-subtle h3, 
+.bg-success-subtle h5, 
+.bg-success-subtle div {
+  color: #10b981 !important;
+  font-weight: 800 !important;
+}
+
+/* Boutons */
+.btn-outline-primary {
+  color: #60a5fa !important;
+  border-color: #60a5fa !important;
+  font-weight: bold !important;
+}
+
+.btn-success {
+  background-color: #10b981 !important;
+  border: none !important;
+  font-weight: bold !important;
+}
+
+/* On force la visibilité de tout ce qui est dans les cartes */
+.card-body, .card-body * {
+  color: inherit;
+}

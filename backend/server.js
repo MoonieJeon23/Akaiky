@@ -10,14 +10,14 @@ const Groq = require('groq-sdk');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// Middlewares pour la sécurité et la lecture du JSON
 app.use(cors());
 app.use(express.json());
 
-// Services
+// Initialisation de l'IA Groq
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// Connexion BDD (Pool de connexions pour plus de performance)
+// Connexion à la base de données akaiky_db
 const db = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -27,9 +27,7 @@ const db = mysql.createPool({
     connectionLimit: 10
 });
 
-/**
- * LOGIQUE MÉTIER / HELPERS
- */
+// Fonction utilitaire pour l'heure de Madagascar
 const getMadagascarTime = () => {
     return new Date().toLocaleTimeString('fr-FR', { 
         timeZone: 'Indian/Antananarivo', 
@@ -43,18 +41,25 @@ const getMadagascarTime = () => {
  * ROUTES API
  */
 
-// --- IA & CHAT ---
+// --- ROUTE 1 : IA & CHAT (Avec injection de ta position GPS) ---
 app.post('/api/chat', async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, lat, lng } = req.body; 
     if (!prompt) return res.status(400).json({ error: "Le prompt est requis" });
 
     try {
         const timeAtTana = getMadagascarTime();
+        
+        // On crée un contexte de localisation dynamique pour l'IA
+        let locationContext = "L'utilisateur est à Antananarivo.";
+        if (lat && lng) {
+            locationContext = `L'utilisateur est situé à Lat: ${lat}, Lng: ${lng} (secteur Soarano/Ankorondrano). Ne lui demande pas sa position.`;
+        }
+
         const completion = await groq.chat.completions.create({
             messages: [
                 {
                     role: "system",
-                    content: `Tu es Akaiky IA, experte de Madagascar. Localisation: Antananarivo. Heure: ${timeAtTana}.`
+                    content: `Tu es Akaiky IA, experte médicale. ${locationContext} Heure locale: ${timeAtTana}. Donne des conseils honnêtes et fermes.`
                 },
                 { role: "user", content: prompt }
             ],
@@ -64,47 +69,30 @@ app.post('/api/chat', async (req, res) => {
 
         res.json({ text: completion.choices[0]?.message?.content || "" });
     } catch (error) {
-        console.error("[GROQ ERROR]", error.message);
+        console.error("Erreur Groq:", error);
         res.status(500).json({ error: "Erreur de communication avec l'IA" });
     }
 });
 
-// --- GEOLOCALISATION & LIEUX ---
-app.get('/api/locations', (req, res) => {
-    const sql = "SELECT * FROM locations";
+// --- ROUTE 2 : RÉCUPÉRATION DES CATÉGORIES DE SANTÉ (BDD) ---
+app.post('/api/locations/nearby', (req, res) => {
+    const { lat, lng } = req.body; 
+    if (!lat || !lng) return res.status(400).json({ error: "GPS non détecté" });
+
+    // On récupère les mots-clés (Hôpital, CSB, etc.) définis dans ta BDD
+    const sql = "SELECT name, type FROM locations ORDER BY name ASC";
     db.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ error: "Base de données inaccessible" });
-        res.json(results);
-    });
-});
-
-app.get('/api/nearby', (req, res) => {
-    const { lat, lng } = req.query;
-    if (!lat || !lng) return res.status(400).json({ error: "Coordonnées manquantes" });
-
-    const haversineQuery = `
-        SELECT *, (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance 
-        FROM locations 
-        HAVING distance < 5 
-        ORDER BY distance LIMIT 10`;
-
-    db.query(haversineQuery, [lat, lng, lat], (err, results) => {
-        if (err) return res.status(500).json({ error: "Erreur lors du calcul de proximité" });
+        if (err) {
+            console.error("Erreur SQL:", err);
+            return res.status(500).json({ error: "Base de données inaccessible" });
+        }
         res.json(results);
     });
 });
 
 /**
- * BOOTSTRAP
+ * LANCEMENT DU SERVEUR
  */
 app.listen(PORT, () => {
-    console.log(`
-    ╔════════════════════════════════════════════╗
-    ║ 🚀 AKAÏKY BACKEND - OPÉRATIONNEL           ║
-    ╠════════════════════════════════════════════╣
-    ║ Port      : ${PORT}                             ║
-    ║ IA        : Llama-3.3 (Groq)               ║
-    ║ BDD       : MySQL (Pool actif)             ║
-    ╚════════════════════════════════════════════╝
-    `);
+    console.log(`🚀 AKAÏKY BACKEND prêt sur le port ${PORT}`);
 });
